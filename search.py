@@ -111,11 +111,11 @@ def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
         return []
 
     queue = util.Queue()
-    visited = set()
+    visited = []
 
-    visited.add(start_state)
+    visited.append(start_state)
     for successor in problem.getSuccessors(start_state):
-        visited.add(successor[0])
+        visited.append(successor[0])
         queue.push([successor])
 
     while not queue.isEmpty():
@@ -127,12 +127,14 @@ def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
 
         for next_node in problem.getSuccessors(successor[0]):
             if next_node[0] not in visited:
-                visited.add(next_node[0])
+                visited.append(next_node[0])
 
                 new_path = path.copy()
                 new_path.append(next_node)
                 queue.push(new_path)
 
+    print("Path not found")
+    return []
 
 def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
     start_state = problem.getStartState()
