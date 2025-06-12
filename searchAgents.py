@@ -304,7 +304,7 @@ class CornersProblem(search.SearchProblem):
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
-        return (self.startingPosition, set())
+        return (self.startingPosition, ())
 
     def isGoalState(self, state: Any):
         """
@@ -312,9 +312,7 @@ class CornersProblem(search.SearchProblem):
         """
         current_position, visited_corners = state
 
-        count_corners = 4
-
-        return len(visited_corners) == count_corners
+        return len(visited_corners) == len(self.corners)
 
     def getSuccessors(self, state: Any):
         """
@@ -333,15 +331,15 @@ class CornersProblem(search.SearchProblem):
             x, y = position
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
+            next_position = nextx, nexty
 
             if self.walls.width > nextx and self.walls.height > nexty:
-                hitsWall = self.walls[nextx][nexty]
-                if not hitsWall:
+                if not self.walls[nextx][nexty]:
                     new_visited = set(corners)
-                    if position in self.corners and position not in corners:
-                        new_visited.add(position)
+                    if next_position in self.corners and next_position not in corners:
+                        new_visited.add(next_position)
 
-                    successors.append( ( ((nextx, nexty), new_visited ), action, 1 ) )
+                    successors.append( ( (next_position, tuple(new_visited)), action, 1 ) )
 
         self._expanded += 1  # DO NOT CHANGE
         return successors
@@ -376,9 +374,15 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     corners = problem.corners  # These are the corner coordinates
     walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
-    distances_to_corners = [get_distance(state, corner) for corner in corners]
+    position, visited_corners = state
+    distances_to_corners = [get_distance(position, corner) for corner in corners]
+    distances_between_corners = []
+    for i in range(0, len(corners)):
+        for j in range(i, len(corners)):
+            if i != j:
+                distances_between_corners.append(get_distance(corners[i], corners[j]))
 
-    return min(distances_to_corners)
+    return min(min(distances_between_corners), min(distances_to_corners))
 
 
 def get_distance(start, end) -> int:

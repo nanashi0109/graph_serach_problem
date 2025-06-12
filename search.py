@@ -103,6 +103,7 @@ def depthFirstSearch(problem: SearchProblem) -> List[Directions]:
                     new_path.append(next_node)
 
                     stack.push(new_path)
+    return []
 
 
 def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
@@ -111,11 +112,11 @@ def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
         return []
 
     queue = util.Queue()
-    visited = []
+    visited = set()
 
-    visited.append(start_state)
+    visited.add(start_state)
     for successor in problem.getSuccessors(start_state):
-        visited.append(successor[0])
+        visited.add(successor[0])
         queue.push([successor])
 
     while not queue.isEmpty():
@@ -127,14 +128,14 @@ def breadthFirstSearch(problem: SearchProblem) -> List[Directions]:
 
         for next_node in problem.getSuccessors(successor[0]):
             if next_node[0] not in visited:
-                visited.append(next_node[0])
+                visited.add(next_node[0])
 
                 new_path = path.copy()
                 new_path.append(next_node)
                 queue.push(new_path)
 
-    print("Path not found")
     return []
+
 
 def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
     start_state = problem.getStartState()
@@ -142,13 +143,13 @@ def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
     if problem.isGoalState(start_state):
         return []
 
-    priorityQueue = util.PriorityQueue()
+    priority_queue = util.PriorityQueue()
     visited = set()
 
-    priorityQueue.push((start_state, [], 0), 0)
+    priority_queue.push((start_state, [], 0), 0)
 
-    while not priorityQueue.isEmpty():
-        state, path, cost = priorityQueue.pop()
+    while not priority_queue.isEmpty():
+        state, path, cost = priority_queue.pop()
 
         if problem.isGoalState(state):
             return path
@@ -163,7 +164,7 @@ def uniformCostSearch(problem: SearchProblem) -> List[Directions]:
 
                     new_cost = cost + next_node[2]
 
-                    priorityQueue.push((next_node[0], new_path, new_cost), new_cost)
+                    priority_queue.push((next_node[0], new_path, new_cost), new_cost)
 
 
 def nullHeuristic(state, problem=None) -> float:
@@ -180,13 +181,13 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directi
     if problem.isGoalState(start_state):
         return []
 
-    priorityQueue = util.PriorityQueue()
+    priority_queue = util.PriorityQueue()
     visited = {}
 
-    priorityQueue.push((start_state, [], 0), heuristic(start_state, problem))
+    priority_queue.push((start_state, [], 0), heuristic(start_state, problem))
 
-    while not priorityQueue.isEmpty():
-        state, path, cost = priorityQueue.pop()
+    while not priority_queue.isEmpty():
+        state, path, cost = priority_queue.pop()
 
         if problem.isGoalState(state):
             return path
@@ -194,12 +195,16 @@ def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic) -> List[Directi
         if state not in visited.keys() or cost < visited[state]:
             visited[state] = cost
             for next_node in problem.getSuccessors(state):
-                if next_node[0] not in visited or cost < visited[next_node[0]]:
-                    new_path = path.copy()
-                    new_path.append(next_node[1])
+                next_state, action, step_cost = next_node
+                new_cost = cost + step_cost
 
-                    new_cost = cost + next_node[2]
-                    priorityQueue.push((next_node[0], new_path, new_cost), new_cost + heuristic(next_node[0], problem))
+                if next_state not in visited or new_cost < visited[next_state]:
+                    new_path = path.copy()
+                    new_path.append(action)
+
+                    priority = new_cost + heuristic(next_state, problem)
+                    priority_queue.push((next_state, new_path, new_cost), priority)
+    return []
 
 
 # Abbreviations
