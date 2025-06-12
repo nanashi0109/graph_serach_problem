@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -375,14 +375,12 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
     position, visited_corners = state
-    distances_to_corners = [get_distance(position, corner) for corner in corners]
-    distances_between_corners = []
-    for i in range(0, len(corners)):
-        for j in range(i, len(corners)):
-            if i != j:
-                distances_between_corners.append(get_distance(corners[i], corners[j]))
+    distances_to_corners = [get_distance(position, corner) for corner in corners if corner not in visited_corners]
 
-    return min(min(distances_between_corners), min(distances_to_corners))
+    if len(distances_to_corners) != 0:
+        return max(distances_to_corners)
+
+    return 0
 
 
 def get_distance(start, end) -> int:
@@ -462,6 +460,7 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
 
     if len(food_list) == 0:
         return 0
+
     return max(get_nearest_dot(dot_position, food_list)[1] + distance_to_dot,
                get_distance_to_all_dots(position,  food_list)/len(food_list))
 
@@ -478,18 +477,6 @@ def get_nearest_dot(position, list_positions) -> Tuple[Tuple[int, int], int]:
     min_distance = min(distances_to_dots.keys())
 
     return distances_to_dots[min_distance], min_distance
-
-
-def get_count_related_dots(state, problem: FoodSearchProblem):
-    counter = 0
-    position, foodGrid = state
-    food_positions = foodGrid.asList()
-
-    for successor in problem.getSuccessors(state):
-        if successor[0] in food_positions:
-            counter += 1
-
-    return counter
 
 
 def get_distance_to_all_dots(position, dots_position):
@@ -528,7 +515,28 @@ class ClosestDotSearchAgent(SearchAgent):
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
 
-        "*** YOUR CODE HERE ***"
+        if problem.isGoalState(startPosition):
+            return []
+
+        priority_queue = util.PriorityQueue()
+        visited = set()
+
+        priority_queue.push((startPosition, []), 0)
+
+        while not priority_queue.isEmpty():
+            state, path = priority_queue.pop()
+
+            if problem.isGoalState(state):
+                return path
+
+            if state not in visited:
+                visited.add(state)
+                for next_state, action, _ in problem.getSuccessors(state):
+                    if next_state not in visited:
+                        priority = 0 if next_state in food else 1
+                        new_path = path.copy() + [action]
+                        priority_queue.push([next_state, new_path], priority)
+
         return []
 
 
@@ -563,10 +571,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         The state is Pacman's position. Fill this in with a goal test that will
         complete the problem definition.
         """
-        x,y = state
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return state in self.food.asList()
 
 
 def mazeDistance(point1: Tuple[int, int], point2: Tuple[int, int], gameState: pacman.GameState) -> int:
